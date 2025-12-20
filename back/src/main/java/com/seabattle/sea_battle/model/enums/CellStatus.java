@@ -1,0 +1,9 @@
+package com.seabattle.sea_battle.model.enums;
+
+public enum CellStatus {
+    EMPTY,
+    SHIP,
+    HIT,
+    MISS,
+    UNKNOWN
+}
