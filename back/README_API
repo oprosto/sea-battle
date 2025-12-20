@@ -1,0 +1,7 @@
+Создание игры "/api/game/create"
+Присоединение к сессии "/api/game/{sessionId}/join"
+Получить информацию о сессии "/api/game/session/{sessionId}"
+Получить список активных сессий "/api/game/active-sessions"
+Получить список сессий в ожидании (поиск) "/api/game/waiting-sessions"
+Отменить сессию "/api/game/{sessionId}/cancel"
+Узнать статус сервера "/api/game/status"
