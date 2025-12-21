@@ -1,3 +1,4 @@
+// C:\sea-battle\src\main\java\com\seabattle\sea_battle\model\enums\MoveResult.java
 package com.seabattle.sea_battle.model.enums;
 
 public enum MoveResult {

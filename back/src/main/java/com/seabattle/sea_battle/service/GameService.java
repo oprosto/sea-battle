@@ -4,21 +4,64 @@ package com.seabattle.sea_battle.service;
 import com.seabattle.sea_battle.dto.*;
 import com.seabattle.sea_battle.model.*;
 import com.seabattle.sea_battle.model.enums.*;
+import com.seabattle.sea_battle.repository.GameRepository;
+
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class GameService {
     
     private final GameSessionManager sessionManager;
     private final AIService aiService;
+    private final GameRepository gameRepository; 
     
-    public GameService(GameSessionManager sessionManager, AIService aiService) {
+    // Обновить конструктор:
+    public GameService(GameSessionManager sessionManager, AIService aiService, 
+                       GameRepository gameRepository) { // Добавляем параметр
         this.sessionManager = sessionManager;
         this.aiService = aiService;
+        this.gameRepository = gameRepository; // Инициализируем
     }
     
+    public List<GameHistoryResponse> getAllGameHistory() {
+            List<Game> games = gameRepository.findAll();
+        
+        return games.stream()
+                .map(this::convertToHistoryResponse)
+                .sorted((g1, g2) -> g2.getFinishedAt().compareTo(g1.getFinishedAt())) // Сортировка по дате (новые сначала)
+                .collect(Collectors.toList());
+    }
+    
+    private GameHistoryResponse convertToHistoryResponse(Game game) {
+        return new GameHistoryResponse(
+            game.getId(),
+            game.getPlayer1Name(),
+            game.getPlayer2Name(),
+            game.getGameType(),
+            game.getResult(),
+            game.getStartedAt(),
+            game.getFinishedAt()
+        );
+    }
+
+    public void saveCompletedGame(GameSession session, GameStatus finalStatus) {
+        Game game = new Game(
+            session.getPlayer1().getUsername(),
+            session.getPlayer2() != null ? session.getPlayer2().getUsername() : null,
+            session.getGameType(),
+            finalStatus,
+            session.getStartedAt() != null ? session.getStartedAt() : LocalDateTime.now(),
+            session.getFinishedAt() != null ? session.getFinishedAt() : LocalDateTime.now()
+        );
+        
+        gameRepository.save(game);
+    }
+
     public CreateGameResponse createGameSession(CreateGameRequest request) {
         // Проверяем можно ли создать новую сессию
         if (!canCreateNewSession()) {
