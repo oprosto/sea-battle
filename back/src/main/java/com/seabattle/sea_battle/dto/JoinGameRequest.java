@@ -1,4 +1,4 @@
-// C:\sea-battle\src\main\java\com\seabattle\sea_battle\dto\JoinGameRequest.java
+// back\src\main\java\com\seabattle\sea_battle\dto\JoinGameRequest.java
 package com.seabattle.sea_battle.dto;
 
 public class JoinGameRequest {

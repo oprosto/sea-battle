@@ -1,4 +1,4 @@
-// C:\sea-battle\src\main\java\com\seabattle\sea_battle\model\PlayerSession.java
+// back\src\main\java\com\seabattle\sea_battle\model\PlayerSession.java
 package com.seabattle.sea_battle.model;
 
 import java.time.LocalDateTime;

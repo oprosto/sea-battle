@@ -1,7 +1,6 @@
-// C:\sea-battle\src\main\java\com\seabattle\sea_battle\service\GameSessionManager.java
+// back\src\main\java\com\seabattle\sea_battle\service\GameSessionManager.java
 package com.seabattle.sea_battle.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -70,38 +69,36 @@ public class GameSessionManager {
     public synchronized GameSession joinGameSession(UUID sessionId, String playerName) {
         GameSession session = activeGameSessions.get(sessionId);
         
-    if (session == null) {
-        throw new IllegalArgumentException("Game session not found");
-    }
+        if (session == null) {
+            throw new IllegalArgumentException("Game session not found");
+        }
     
-    synchronized (session) {
-        if (session.getStatus() != GameStatus.WAITING_FOR_PLAYER) {
-            throw new IllegalStateException("Game session is not waiting for players");
+        synchronized (session) {
+            if (session.getStatus() != GameStatus.WAITING_FOR_PLAYER) {
+                throw new IllegalStateException("Game session is not waiting for players");
+            }
+        
+            if (session.getGameType() != GameType.PVP) {
+                throw new IllegalStateException("Only PVP games can be joined");
+            }
+        
+            // Проверяем, что игрок не участвует уже в другой игре
+            if (isPlayerInActiveGame(playerName)) {
+                throw new IllegalArgumentException(
+                    String.format("Player %s is already in an active game", playerName)
+                );
+            }
+        
+            // Создаем и подключаем игрока
+            Player player2 = new Player(playerName);
+            session.connectSecondPlayer(player2);
+        
+            // Регистрируем игрока
+            PlayerSession playerSession = new PlayerSession(playerName, sessionId);
+            activePlayerSessions.put(playerName, playerSession);
         }
-        
-        if (session.getGameType() != GameType.PVP) {
-            throw new IllegalStateException("Only PVP games can be joined");
-        }
-        
-        // Проверяем, что игрок не участвует уже в другой игре
-        if (isPlayerInActiveGame(playerName)) {
-            throw new IllegalArgumentException(
-                String.format("Player %s is already in an active game", playerName)
-            );
-        }
-        
-        // Создаем и подключаем игрока
-        Player player2 = new Player(playerName);
-        session.setPlayer2(player2);
-        session.setStatus(GameStatus.IN_PROGRESS);
-        session.setStartedAt(LocalDateTime.now());
-        
-        // Регистрируем игрока
-        PlayerSession playerSession = new PlayerSession(playerName, sessionId);
-        activePlayerSessions.put(playerName, playerSession);
-    }
 
-    return session;
+        return session;
     }
     
     /*

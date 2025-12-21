@@ -1,4 +1,4 @@
-// C:\sea-battle\src\main\java\com\seabattle\sea_battle\dto\CreateGameResponse.java
+// back\src\main\java\com\seabattle\sea_battle\dto\CreateGameResponse.java
 package com.seabattle.sea_battle.dto;
 
 import java.util.UUID;

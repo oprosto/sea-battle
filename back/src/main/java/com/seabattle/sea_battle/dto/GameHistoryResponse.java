@@ -1,4 +1,4 @@
-// C:\sea-battle\src\main\java\com\seabattle\sea_battle\dto\GameHistoryResponse.java
+// back\src\main\java\com\seabattle\sea_battle\dto\GameHistoryResponse.java
 package com.seabattle.sea_battle.dto;
 
 import com.seabattle.sea_battle.model.enums.GameStatus;

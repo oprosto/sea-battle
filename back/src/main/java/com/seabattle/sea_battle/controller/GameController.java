@@ -1,4 +1,4 @@
-// C:\sea-battle\src\main\java\com\seabattle\sea_battle\controller\GameController.java
+// back\src\main\java\com\seabattle\sea_battle\controller\GameController.java
 package com.seabattle.sea_battle.controller;
 
 import com.seabattle.sea_battle.dto.CreateGameRequest;
@@ -147,4 +147,5 @@ public class GameController {
             );
         }
     }
+
 }
