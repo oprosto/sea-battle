@@ -3,7 +3,8 @@ package com.seabattle.sea_battle.model;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.stream.Collectors;
+import java.util.Map;
 import com.seabattle.sea_battle.model.enums.CellStatus;
 
 import lombok.Getter;
@@ -64,7 +65,7 @@ public class Board {
             boolean placed = false;
             int attempts = 0;
             
-            while (!placed && attempts < 100) {
+            while (!placed && attempts < 1000) {
                 attempts++;
                 
                 boolean horizontal = Math.random() > 0.5;
@@ -80,7 +81,11 @@ public class Board {
             }
             
             if (!placed) {
-                throw new IllegalStateException("Failed to place ship automatically");
+                //throw new IllegalStateException("Failed to place ship automatically");
+                ships.clear();
+                clearBoard();
+                placeShipsAutomatically(); // Рекурсивный вызов
+                return;
             }
         }
     }
@@ -152,13 +157,37 @@ public class Board {
     }
 
     private boolean validateShipCount() {
-        // Проверяем по количеству клеток кораблей
-        long totalShipCells = ships.stream()
-                .mapToInt(Ship::getLength)
-                .sum();
+        Map<Integer, Long> shipsByLength = ships.stream()
+        .collect(Collectors.groupingBy(Ship::getLength, Collectors.counting()));
+    
+        // Стандартная расстановка: 1x4, 2x3, 3x2, 4x1
+        Map<Integer, Integer> requiredShips = Map.of(
+            4, 1,
+            3, 2,
+            2, 3,
+            1, 4
+        );
+            
+        for (Map.Entry<Integer, Integer> entry : requiredShips.entrySet()) {
+            int length = entry.getKey();
+            int requiredCount = entry.getValue();
+            long actualCount = shipsByLength.getOrDefault(length, 0L);
+                
+            if (actualCount != requiredCount) {
+                return false;
+            }
+        }
+            
+        return true;
+        // // Проверяем по количеству клеток кораблей
+        // long totalShipCells = ships.stream()
+        //         .mapToInt(Ship::getLength)
+        //         .sum();
         
-        return totalShipCells == 20; // 4+3+3+2+2+2+1+1+1+1 = 20
+        // return totalShipCells == 20; // 4+3+3+2+2+2+1+1+1+1 = 20
     }
+
+        
 
     /**
      * Выстрел по доске

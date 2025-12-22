@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -29,7 +28,7 @@ public class GameService {
     }
     
     public List<GameHistoryResponse> getAllGameHistory() {
-            List<Game> games = gameRepository.findAll();
+        List<Game> games = gameRepository.findAll();
         
         return games.stream()
                 .map(this::convertToHistoryResponse)
@@ -49,18 +48,11 @@ public class GameService {
         );
     }
 
-    public void saveCompletedGame(GameSession session, GameStatus finalStatus) {
-        Game game = new Game(
-            session.getPlayer1().getUsername(),
-            session.getPlayer2() != null ? session.getPlayer2().getUsername() : null,
-            session.getGameType(),
-            finalStatus,
-            session.getStartedAt() != null ? session.getStartedAt() : LocalDateTime.now(),
-            session.getFinishedAt() != null ? session.getFinishedAt() : LocalDateTime.now()
-        );
+    // public void saveCompletedGame(GameSession session, GameStatus finalStatus) {
+    //     Game game = session.finishGame(finalStatus);
         
-        gameRepository.save(game);
-    }
+    //     gameRepository.save(game);
+    // }
 
     public CreateGameResponse createGameSession(CreateGameRequest request) {
         // Проверяем можно ли создать новую сессию

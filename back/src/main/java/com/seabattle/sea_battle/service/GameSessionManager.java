@@ -12,11 +12,13 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 import com.seabattle.sea_battle.config.GameProperties;
+import com.seabattle.sea_battle.model.Game;
 import com.seabattle.sea_battle.model.GameSession;
 import com.seabattle.sea_battle.model.Player;
 import com.seabattle.sea_battle.model.PlayerSession;
 import com.seabattle.sea_battle.model.enums.GameStatus;
 import com.seabattle.sea_battle.model.enums.GameType;
+import com.seabattle.sea_battle.repository.GameRepository;
 
 import lombok.Getter;
 
@@ -28,9 +30,11 @@ public class GameSessionManager {
     private final Map<UUID, GameSession> activeGameSessions = new ConcurrentHashMap<>();
     private final Map<String, PlayerSession> activePlayerSessions = new ConcurrentHashMap<>();
     private final GameProperties gameProperties;
+    private final GameRepository gameRepository;
     
-    public GameSessionManager(GameProperties gameProperties) {
+    public GameSessionManager(GameProperties gameProperties, GameRepository gameRepository) {
         this.gameProperties = gameProperties;
+        this.gameRepository = gameRepository;
     }
     
     /**
@@ -122,9 +126,14 @@ public class GameSessionManager {
         // Проверяем статус игры
         GameStatus status = gameSession.getStatus();
         return status == GameStatus.WAITING_FOR_PLAYER || 
+               status == GameStatus.PLACING_SHIPS ||
                status == GameStatus.IN_PROGRESS;
     }
     
+    public void saveCompletedGame(GameSession session, GameStatus finalStatus) {
+        
+    }
+
     /**
      * Завершение игровой сессии
      */
@@ -132,8 +141,7 @@ public class GameSessionManager {
         GameSession session = activeGameSessions.get(sessionId);
         
         if (session != null) {
-            session.finishGame(finalStatus);
-            
+            Game game = session.finishGame(finalStatus);
             // Освобождаем игроков
             if (session.getPlayer1() != null) {
                 activePlayerSessions.remove(session.getPlayer1().getUsername());
@@ -142,8 +150,8 @@ public class GameSessionManager {
                 activePlayerSessions.remove(session.getPlayer2().getUsername());
             }
             
-            // TODO: Сохранить результат в БД
             
+            gameRepository.save(game);
             // Удаляем из активных через некоторое время
             // (в реальном приложении можно переместить в архив)
             scheduleSessionRemoval(sessionId);
@@ -157,8 +165,7 @@ public class GameSessionManager {
         GameSession session = activeGameSessions.get(sessionId);
         
         if (session != null) {
-            session.finishGame(GameStatus.CANCELLED);
-            
+            finishGameSession(sessionId, GameStatus.CANCELLED);
             // Освобождаем игроков
             if (session.getPlayer1() != null) {
                 activePlayerSessions.remove(session.getPlayer1().getUsername());
@@ -192,12 +199,6 @@ public class GameSessionManager {
         return activeGameSessions.size();
     }
     
-    /**
-     * Проверка минимального требования по сессиям
-     */
-    public boolean meetsMinimumSessionsRequirement() {
-        return getActiveSessionsCount() >= gameProperties.getMinActiveSessions();
-    }
     
     /**
      * Получение сессий, ожидающих второго игрока
@@ -235,9 +236,7 @@ public class GameSessionManager {
             "pvpSessions", pvpCount,
             "pveSessions", pveCount,
             "activePlayers", activePlayerSessions.size(),
-            "maxSessions", gameProperties.getMaxActiveSessions(),
-            "minSessionsRequired", gameProperties.getMinActiveSessions(),
-            "meetsMinimumRequirement", meetsMinimumSessionsRequirement()
+            "maxSessions", gameProperties.getMaxActiveSessions()
         );
     }
     

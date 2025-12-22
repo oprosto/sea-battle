@@ -7,19 +7,18 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "game")
 public class GameProperties {
-    private int minActiveSessions = 3;     // Минимум 3 активных сессии
     private int maxActiveSessions = 10;    // Максимум 10 активных сессий
     private long sessionTimeout = 300000;  // 5 минут таймаут для ожидания игрока (в мс)
     private long cleanupInterval = 60000;  // Интервал очистки (1 минута)
     
-    // Геттеры и сеттеры
-    public int getMinActiveSessions() {
-        return minActiveSessions;
-    }
+    // // Геттеры и сеттеры
+    // public int getMinActiveSessions() {
+    //     return minActiveSessions;
+    // }
     
-    public void setMinActiveSessions(int minActiveSessions) {
-        this.minActiveSessions = minActiveSessions;
-    }
+    // public void setMinActiveSessions(int minActiveSessions) {
+    //     this.minActiveSessions = minActiveSessions;
+    // }
     
     public int getMaxActiveSessions() {
         return maxActiveSessions;

@@ -20,15 +20,7 @@ import lombok.Getter;
 @Service
 public class AIService {
     
-    private final Player AI;
-
-    public AIService(){
-        this.AI = createAIPlayer();
-    }
-
-    public Player createAIPlayer() {
-        return new Player("AI_Player", true);
-    }
+    private final Player AI = new Player("AI_Player", true);
     
     /**
      * AI делает ход

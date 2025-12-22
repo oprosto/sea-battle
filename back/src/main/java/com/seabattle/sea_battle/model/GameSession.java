@@ -1,6 +1,7 @@
 // back\src\main\java\com\seabattle\sea_battle\model\GameSession.java
 package com.seabattle.sea_battle.model;
 
+import com.seabattle.sea_battle.model.enums.CellStatus;
 import com.seabattle.sea_battle.model.enums.GameStatus;
 import com.seabattle.sea_battle.model.enums.GameType;
 import lombok.Getter;
@@ -84,46 +85,43 @@ public class GameSession {
             throw new IllegalStateException("Not your turn");
         }
         
-        boolean hit;
+        // Проверяем валидность координат
+        if (x < 0 || x >= 10 || y < 0 || y >= 10) {
+            throw new IllegalArgumentException("Invalid coordinates");
+        }
+        
+        Board targetBoard;
+        if (shooterName.equals(player1.getUsername())) {
+            targetBoard = player2Board;
+        } else {
+            targetBoard = player1Board;
+        }
+        
+        // Проверяем, не стреляли ли уже в эту клетку
+        Cell targetCell = targetBoard.getCells()[x][y];
+        if (targetCell.getStatus() == CellStatus.HIT || 
+            targetCell.getStatus() == CellStatus.MISS) {
+            throw new IllegalStateException("Already fired at this cell");
+        }
+        
+        boolean hit = targetBoard.takeShot(x, y);
         boolean sunk = false;
         boolean gameOver = false;
         
-        if (shooterName.equals(player1.getUsername())) {
-            // Игрок 1 стреляет по игроку 2
-            hit = player2Board.takeShot(x, y);
-            if (hit) {
-                // Проверяем, потоплен ли корабль
-                Cell cell = player2Board.getCells()[x][y];
-                if (cell.getShip() != null && cell.getShip().isSunk()) {
-                    sunk = true;
-                }
-                // Проверяем конец игры
-                if (player2Board.allShipsSunk()) {
-                    gameOver = true;
-                    finishGame(GameStatus.PLAYER1_WON);
-                }
+        if (hit) {
+            // Проверяем, потоплен ли корабль
+            if (targetCell.getShip() != null && targetCell.getShip().isSunk()) {
+                sunk = true;
             }
+            // Проверяем конец игры
+            if (targetBoard.allShipsSunk()) {
+                gameOver = true;
+                finishGame(shooterName.equals(player1.getUsername()) ? 
+                        GameStatus.PLAYER1_WON : GameStatus.PLAYER2_WON);
+            }
+            // При попадании ход НЕ переключается - игрок стреляет снова
         } else {
-            // Игрок 2 стреляет по игроку 1
-            hit = player1Board.takeShot(x, y);
-            if (hit) {
-                Cell cell = player1Board.getCells()[x][y];
-                if (cell.getShip() != null && cell.getShip().isSunk()) {
-                    sunk = true;
-                }
-                if (player1Board.allShipsSunk()) {
-                    gameOver = true;
-                    if (player2.isAI()) {
-                        finishGame(GameStatus.AI_WON);
-                    } else {
-                        finishGame(GameStatus.PLAYER2_WON);
-                    }
-                }
-            }
-        }
-        
-        // Если был промах - передаем ход
-        if (!hit) {
+            // При промахе передаем ход
             switchTurn();
         }
         
@@ -173,9 +171,18 @@ public class GameSession {
     }
     
     // Метод для завершения игры
-    public void finishGame(GameStatus finalStatus) {
+    public Game finishGame(GameStatus finalStatus) {
         this.status = finalStatus;
-        this.finishedAt = LocalDateTime.now();
+        Game game = new Game(
+            getPlayer1().getUsername(),
+            getPlayer2() != null ? getPlayer2().getUsername() : null,
+            getGameType(),
+            finalStatus,
+            getStartedAt() != null ? getStartedAt() : LocalDateTime.now(),
+            getFinishedAt() != null ? getFinishedAt() : LocalDateTime.now()
+        );
+        
+        return game;
     }
     
     /**

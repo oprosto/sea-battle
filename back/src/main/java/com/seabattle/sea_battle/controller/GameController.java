@@ -125,8 +125,6 @@ public class GameController {
             "status", "running",
             "activeSessions", gameSessionManager.getActiveSessionsCount(),
             "maxSupportedSessions", gameSessionManager.getGameProperties().getMaxActiveSessions(),
-            "minRequiredSessions", gameSessionManager.getGameProperties().getMinActiveSessions(),
-            "meetsMinimumRequirement", gameSessionManager.meetsMinimumSessionsRequirement(),
             "waitingSessions", gameSessionManager.getWaitingSessions().size(),
             "activePlayers", gameSessionManager.getActivePlayerSessions().size(),
             "supportedGameTypes", new String[]{"PVP", "PVE"}

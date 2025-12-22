@@ -12,7 +12,3 @@ public class PlaceShipRequest {
     private int length;
     private boolean horizontal;
 }
-
-
-
-

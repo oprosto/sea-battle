@@ -122,11 +122,7 @@ public class GamePlayService {
         
         if (result.isGameOver()) {
             message += " Game over!";
-            // Сохраняем результат игры
-            GameService gameService = getGameService();
-            if (gameService != null) {
-                gameService.saveCompletedGame(session, session.getStatus());
-            }
+            sessionManager.finishGameSession(sessionId, session.getStatus());
         }
         
         return new FireResponse(
@@ -231,9 +227,9 @@ public class GamePlayService {
         return state;
     }
     
-    private GameService getGameService() {
-        // Этот метод нужен для доступа к GameService для сохранения истории
-        // В реальном приложении лучше использовать Dependency Injection
-        return null;
-    }
+    // private GameService getGameService() {
+    //     // Этот метод нужен для доступа к GameService для сохранения истории
+    //     // В реальном приложении лучше использовать Dependency Injection
+    //     return null;
+    // }
 }
