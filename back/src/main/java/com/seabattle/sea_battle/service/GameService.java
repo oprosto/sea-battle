@@ -79,7 +79,7 @@ public class GameService {
         
         // Если это игра против AI, сразу создаем AI игрока
         if (request.getGameType() == GameType.PVE) {
-            Player aiPlayer = aiService.createAIPlayer();
+            Player aiPlayer = aiService.getAI();
             session.connectSecondPlayer(aiPlayer);
         }
         

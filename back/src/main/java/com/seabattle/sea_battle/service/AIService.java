@@ -1,17 +1,33 @@
 // back\src\main\java\com\seabattle\sea_battle\service\AIService.java
 package com.seabattle.sea_battle.service;
 
-import com.seabattle.sea_battle.model.*;
-import com.seabattle.sea_battle.model.enums.CellStatus;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import com.seabattle.sea_battle.model.Board;
+import com.seabattle.sea_battle.model.Cell;
+import com.seabattle.sea_battle.model.GameSession;
+import com.seabattle.sea_battle.model.Player;
+import com.seabattle.sea_battle.model.enums.CellStatus;
 
+import lombok.Getter;
+
+
+@Getter
 @Service
 public class AIService {
     
+    private final Player AI;
+
+    public AIService(){
+        this.AI = createAIPlayer();
+    }
+
     public Player createAIPlayer() {
-        return new Player("AI_Player_" + UUID.randomUUID().toString().substring(0, 8), true);
+        return new Player("AI_Player", true);
     }
     
     /**

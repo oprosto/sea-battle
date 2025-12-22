@@ -74,59 +74,59 @@ public class GamePlayController {
         }
     }
     
-    // /**
-    //  * Получение состояния доски
-    //  */
-    // @GetMapping("/{sessionId}/board")
-    // public ResponseEntity<?> getBoardState(@PathVariable UUID sessionId,
-    //                                        @RequestParam String playerName,
-    //                                        @RequestParam(required = false, defaultValue = "true") boolean isOwner) {
-    //     try {
-    //         BoardStateResponse response = gamePlayService.getBoardState(sessionId, playerName, isOwner);
-    //         return ResponseEntity.ok(response);
-    //     } catch (Exception e) {
-    //         return ResponseEntity.badRequest().body(Map.of(
-    //             "error", e.getMessage()
-    //         ));
-    //     }
-    // }
+    /**
+     * Получение состояния доски
+     */
+    @GetMapping("/{sessionId}/board")
+    public ResponseEntity<?> getBoardState(@PathVariable UUID sessionId,
+                                           @RequestParam String playerName,
+                                           @RequestParam(required = false, defaultValue = "true") boolean isOwner) {
+        try {
+            BoardStateResponse response = gamePlayService.getBoardState(sessionId, playerName, isOwner);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", e.getMessage()
+            ));
+        }
+    }
     
-    // /**
-    //  * Выстрел по противнику
-    //  */
-    // @PostMapping("/{sessionId}/fire")
-    // public ResponseEntity<?> fire(@PathVariable UUID sessionId,
-    //                                @RequestBody FireRequest request) {
-    //     try {
-    //         FireResponse response = gamePlayService.fire(sessionId, request);
-    //         return ResponseEntity.ok(response);
-    //     } catch (IllegalStateException e) {
-    //         return ResponseEntity.badRequest().body(Map.of(
-    //             "error", e.getMessage()
-    //         ));
-    //     } catch (Exception e) {
-    //         return ResponseEntity.internalServerError().body(Map.of(
-    //             "error", "Failed to process fire"
-    //         ));
-    //     }
-    // }
+    /**
+     * Выстрел по противнику
+     */
+    @PostMapping("/{sessionId}/fire")
+    public ResponseEntity<?> fire(@PathVariable UUID sessionId,
+                                   @RequestBody FireRequest request) {
+        try {
+            FireResponse response = gamePlayService.fire(sessionId, request);
+            return ResponseEntity.ok(response);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                "error", "Failed to process fire"
+            ));
+        }
+    }
     
-    // /**
-    //  * Получение информации о текущем ходе
-    //  */
-    // @GetMapping("/{sessionId}/turn")
-    // public ResponseEntity<?> getCurrentTurn(@PathVariable UUID sessionId) {
-    //     try {
-    //         String currentPlayer = gamePlayService.getCurrentTurn(sessionId);
-    //         return ResponseEntity.ok(Map.of(
-    //             "currentTurn", currentPlayer
-    //         ));
-    //     } catch (Exception e) {
-    //         return ResponseEntity.badRequest().body(Map.of(
-    //             "error", e.getMessage()
-    //         ));
-    //     }
-    // }
+    /**
+     * Получение информации о текущем ходе
+     */
+    @GetMapping("/{sessionId}/turn")
+    public ResponseEntity<?> getCurrentTurn(@PathVariable UUID sessionId) {
+        try {
+            String currentPlayer = gamePlayService.getCurrentTurn(sessionId);
+            return ResponseEntity.ok(Map.of(
+                "currentTurn", currentPlayer
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", e.getMessage()
+            ));
+        }
+    }
     
     // /**
     //  * Проверка готовности игроков
