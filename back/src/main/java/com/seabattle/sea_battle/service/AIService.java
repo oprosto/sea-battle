@@ -25,9 +25,9 @@ public class AIService {
     /**
      * AI делает ход
      */
-    public void makeAIMove(GameSession session) {
+    public GameSession.FireResult makeAIMove(GameSession session) {
         if (!session.getPlayer2().isAI()) {
-            return; // Не AI игрок
+            return null; // Не AI игрок
         }
         
         // Простая логика AI: сначала случайные выстрелы, после попадания - вокруг
@@ -35,8 +35,10 @@ public class AIService {
         int[] target = findTarget(opponentBoard);
         
         if (target != null) {
-            session.fireAtOpponent(session.getPlayer2().getUsername(), target[0], target[1]);
+            GameSession.FireResult result = session.fireAtOpponent(session.getPlayer2().getUsername(), target[0], target[1]);
+            return result;
         }
+        return null;
     }
     
     private int[] findTarget(Board board) {

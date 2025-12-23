@@ -137,7 +137,7 @@ public class GamePlayService {
         
         // Выполняем выстрел
         GameSession.FireResult result = session.fireAtOpponent(request.getPlayerName(), request.getX(), request.getY());
-        
+        GameSession.FireResult aiResult = result;
         // Получаем обновленные доски
         String opponentName = session.getOpponentName(request.getPlayerName());
     
@@ -161,13 +161,15 @@ public class GamePlayService {
         Map<String, Object> fireResult = new HashMap<>();
         fireResult.put("hit", result.isHit());
         fireResult.put("sunk", result.isSunk());
-        fireResult.put("x", request.getX());
-        fireResult.put("y", request.getY());
+        fireResult.put("x", result.getX());
+        fireResult.put("y", result.getY());
         fireResult.put("shooter", request.getPlayerName());
         
         // 1. Уведомляем всех о результате выстрела
         sseService.notifyFireResult(sessionId, request.getPlayerName(), fireResult);
-
+        if(session.getGameType().equals(com.seabattle.sea_battle.model.enums.GameType.PVP)){
+            sseService.notifyFireResult(sessionId, session.getOpponentName(request.getPlayerName()), fireResult);
+        }
         // // 2. Уведомляем игрока о необходимости обновить доску
         // String opponentName = session.getOpponentName(request.getPlayerName());
         // sseService.notifyBoardUpdate(sessionId, opponentName);
@@ -176,36 +178,45 @@ public class GamePlayService {
         if (!result.isHit()) {
             sseService.notifyTurnChange(sessionId, session.getCurrentTurn());
         }
-
-        // Если игра против AI и был промах - AI делает ход
+        
         if (session.getGameType().equals(com.seabattle.sea_battle.model.enums.GameType.PVE) && 
             session.getPlayer2().isAI() && !result.isHit()) {
-            aiService.makeAIMove(session);
+            GameSession.FireResult airesult = aiService.makeAIMove(session);
+            
+            targetBoard = session.getPlayer1Board();
+            updatedTargetBoard = targetBoard.getBoardState(true);
 
+            cellStatusStr = result.isHit() ? "HIT" : "MISS";
+            sseService.sendCellUpdate(sessionId, request.getPlayerName(), result.getX(), result.getY(), cellStatusStr);
+
+            sseService.sendOwnerBoardUpdate(sessionId, request.getPlayerName(), updatedTargetBoard);
             // Уведомляем о ходе AI
             Map<String, Object> aiFireResult = new HashMap<>();
-            aiFireResult.put("shooter", session.getPlayer2().getUsername());
+            aiFireResult.put("hit", airesult.isHit());
+            aiFireResult.put("sunk", airesult.isSunk());
+            aiFireResult.put("x", airesult.getX());
+            aiFireResult.put("y", airesult.getY());
+            aiFireResult.put("shooter", session.getOpponentName(request.getPlayerName()));
             aiFireResult.put("isAI", true);
-            sseService.notifyFireResult(sessionId, session.getPlayer2().getUsername(), aiFireResult);
-            sseService.notifyBoardUpdate(sessionId, session.getPlayer1().getUsername());
-            
-            // Если AI потопил все корабли игрока
+
+            sseService.notifyFireResult(sessionId, request.getPlayerName(), aiFireResult);
+
             if (session.getPlayer1Board().allShipsSunk()) {
-                GameStatus aiWinStatus = GameStatus.AI_WON;
-                sessionManager.finishGameSession(sessionId, aiWinStatus);
-                sseService.notifyGameOver(sessionId, session.getPlayer2().getUsername(), aiWinStatus);
+                sseService.notifyGameOver(sessionId, session.getOpponentName(request.getPlayerName()), session.getStatus());
             }
         }
-        
+
         // Формируем ответ
         CellStatus cellStatus = result.isHit() ? CellStatus.HIT : CellStatus.MISS;
         String message = result.isHit() ? 
             (result.isSunk() ? "Hit! Ship sunk!" : "Hit!") : 
             "Miss!";
         
-        if (result.isGameOver()) {
-            message += " Game over!";
+        if (result.isGameOver() || aiResult.isGameOver()) {
+            message += " Game!";
             sessionManager.finishGameSession(sessionId, session.getStatus());
+            sseService.notifyGameOver(sessionId, request.getPlayerName(), session.getStatus());
+            sseService.notifyGameOver(sessionId, session.getOpponentName(request.getPlayerName()), session.getStatus());
         }
         
         return new FireResponse(
@@ -217,6 +228,20 @@ public class GamePlayService {
         );
     }
     
+    public void Aifire(UUID sessionId, boolean hit){
+        GameSession session = sessionManager.getGameSession(sessionId);
+        
+        if (session == null) {
+            throw new IllegalArgumentException("Game session not found");
+        }
+        
+        if (!session.getStatus().equals(GameStatus.IN_PROGRESS)) {
+            throw new IllegalStateException("Game is not in progress");
+        }
+
+        
+    }
+
     /**
      * Получение текущего хода
      */

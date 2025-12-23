@@ -204,9 +204,7 @@ public class SseNotificationService {
  */
 public void notifyGameOver(UUID sessionId, String winner, GameStatus status) {
     sendToAllInGame(sessionId, "GAME_OVER", Map.of(
-        "winner", winner,
-        "status", status.toString(),
-        "message", winner + " wins!"
+        "status", status.toString()
     ));
 }
 

@@ -116,7 +116,7 @@ public class GameSession {
             // Проверяем конец игры
             if (targetBoard.allShipsSunk()) {
                 gameOver = true;
-                finishGame(shooterName.equals(player1.getUsername()) ? 
+                setStatus(shooterName.equals(player1.getUsername()) ? 
                         GameStatus.PLAYER1_WON : GameStatus.PLAYER2_WON);
             }
             // При попадании ход НЕ переключается - игрок стреляет снова
@@ -125,7 +125,7 @@ public class GameSession {
             switchTurn();
         }
         
-        return new FireResult(hit, sunk, gameOver);
+        return new FireResult(hit, sunk, gameOver, x, y);
     }
     
     /**
@@ -202,11 +202,14 @@ public class GameSession {
         private final boolean hit;
         private final boolean sunk;
         private final boolean gameOver;
-        
-        public FireResult(boolean hit, boolean sunk, boolean gameOver) {
+        private final int x;
+        private final int y;
+        public FireResult(boolean hit, boolean sunk, boolean gameOver, int x, int y) {
             this.hit = hit;
             this.sunk = sunk;
             this.gameOver = gameOver;
+            this.x = x;
+            this.y = y;
         }
     }
 }
