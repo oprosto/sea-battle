@@ -11,15 +11,6 @@ public class GameProperties {
     private long sessionTimeout = 300000;  // 5 минут таймаут для ожидания игрока (в мс)
     private long cleanupInterval = 60000;  // Интервал очистки (1 минута)
     
-    // // Геттеры и сеттеры
-    // public int getMinActiveSessions() {
-    //     return minActiveSessions;
-    // }
-    
-    // public void setMinActiveSessions(int minActiveSessions) {
-    //     this.minActiveSessions = minActiveSessions;
-    // }
-    
     public int getMaxActiveSessions() {
         return maxActiveSessions;
     }
