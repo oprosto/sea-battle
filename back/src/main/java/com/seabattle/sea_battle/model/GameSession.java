@@ -170,6 +170,15 @@ public class GameSession {
         throw new IllegalArgumentException("Player not found in this session");
     }
     
+    public String getOpponentName(String playerName) {
+        if (playerName.equals(player1.getUsername())) {
+            return player2.getUsername();
+        } else if (player2 != null && playerName.equals(player2.getUsername())) {
+            return player1.getUsername();
+        }
+        throw new IllegalArgumentException("Player not found in this session");
+    }
+
     // Метод для завершения игры
     public Game finishGame(GameStatus finalStatus) {
         this.status = finalStatus;

@@ -5,6 +5,9 @@ import com.seabattle.sea_battle.dto.*;
 import com.seabattle.sea_battle.model.*;
 import com.seabattle.sea_battle.model.enums.CellStatus;
 import com.seabattle.sea_battle.model.enums.GameStatus;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -15,10 +18,14 @@ public class GamePlayService {
     
     private final GameSessionManager sessionManager;
     private final AIService aiService;
+    private final SseNotificationService sseService; // Добавляем это поле
     
-    public GamePlayService(GameSessionManager sessionManager, AIService aiService) {
+    // Обновляем конструктор:
+    public GamePlayService(GameSessionManager sessionManager, AIService aiService,
+                          SseNotificationService sseService) { // Добавляем параметр
         this.sessionManager = sessionManager;
         this.aiService = aiService;
+        this.sseService = sseService; // Инициализируем
     }
     
     /**
@@ -49,8 +56,19 @@ public class GamePlayService {
         boolean success = playerBoard.placeShips(ships);
         
         if (success) {
-            session.playerReady(request.getPlayerName());
+        session.playerReady(request.getPlayerName());
+        
+        // Уведомляем через SSE о готовности игрока
+        sseService.sendToAllInGame(sessionId, "PLAYER_READY", Map.of(
+            "player", request.getPlayerName(),
+            "ready", true
+        ));
+        
+        // Если оба игрока готовы
+        if (session.isPlayer1Ready() && session.isPlayer2Ready()) {
+            sseService.notifyGameStarted(sessionId);
         }
+    }
         
         return success;
     }
@@ -68,6 +86,17 @@ public class GamePlayService {
         Board playerBoard = session.getPlayerBoard(playerName);
         playerBoard.placeShipsAutomatically();
         session.playerReady(playerName);
+
+        // Уведомляем через SSE
+        sseService.sendToAllInGame(sessionId, "PLAYER_READY", Map.of(
+            "player", playerName,
+            "ready", true,
+            "autoPlaced", true
+        ));
+        
+        if (session.isPlayer1Ready() && session.isPlayer2Ready()) {
+            sseService.notifyGameStarted(sessionId);
+        }
     }
     
     /**
@@ -94,6 +123,7 @@ public class GamePlayService {
     /**
      * Выстрел по противнику
      */
+    @Transactional
     public FireResponse fire(UUID sessionId, FireRequest request) {
         GameSession session = sessionManager.getGameSession(sessionId);
         
@@ -108,10 +138,63 @@ public class GamePlayService {
         // Выполняем выстрел
         GameSession.FireResult result = session.fireAtOpponent(request.getPlayerName(), request.getX(), request.getY());
         
+        // Получаем обновленные доски
+        String opponentName = session.getOpponentName(request.getPlayerName());
+    
+        // Доска игрока, получившего выстрел (с обновленным статусом клетки)
+        Board targetBoard = session.getPlayerBoard(opponentName);
+        String[][] updatedTargetBoard = targetBoard.getBoardState(true);
+        
+        // Доска противника для стреляющего (с видимыми результатами)
+        String[][] opponentViewForShooter = targetBoard.getBoardState(false);
+        
+        // 1. Отправляем обновление конкретной клетки игроку, получившему выстрел
+        String cellStatusStr = result.isHit() ? "HIT" : "MISS";
+        sseService.sendCellUpdate(sessionId, opponentName, request.getX(), request.getY(), cellStatusStr);
+        
+        // 2. Отправляем обновление доски противника стреляющему игроку
+        sseService.sendOwnerBoardUpdate(sessionId, opponentName, updatedTargetBoard);
+        sseService.sendOpponentBoardUpdate(sessionId, request.getPlayerName(), opponentViewForShooter);
+        
+
+        // Формируем результат для SSE
+        Map<String, Object> fireResult = new HashMap<>();
+        fireResult.put("hit", result.isHit());
+        fireResult.put("sunk", result.isSunk());
+        fireResult.put("x", request.getX());
+        fireResult.put("y", request.getY());
+        fireResult.put("shooter", request.getPlayerName());
+        
+        // 1. Уведомляем всех о результате выстрела
+        sseService.notifyFireResult(sessionId, request.getPlayerName(), fireResult);
+
+        // // 2. Уведомляем игрока о необходимости обновить доску
+        // String opponentName = session.getOpponentName(request.getPlayerName());
+        // sseService.notifyBoardUpdate(sessionId, opponentName);
+        
+        // 3. При промахе уведомляем о смене хода
+        if (!result.isHit()) {
+            sseService.notifyTurnChange(sessionId, session.getCurrentTurn());
+        }
+
         // Если игра против AI и был промах - AI делает ход
         if (session.getGameType().equals(com.seabattle.sea_battle.model.enums.GameType.PVE) && 
             session.getPlayer2().isAI() && !result.isHit()) {
             aiService.makeAIMove(session);
+
+            // Уведомляем о ходе AI
+            Map<String, Object> aiFireResult = new HashMap<>();
+            aiFireResult.put("shooter", session.getPlayer2().getUsername());
+            aiFireResult.put("isAI", true);
+            sseService.notifyFireResult(sessionId, session.getPlayer2().getUsername(), aiFireResult);
+            sseService.notifyBoardUpdate(sessionId, session.getPlayer1().getUsername());
+            
+            // Если AI потопил все корабли игрока
+            if (session.getPlayer1Board().allShipsSunk()) {
+                GameStatus aiWinStatus = GameStatus.AI_WON;
+                sessionManager.finishGameSession(sessionId, aiWinStatus);
+                sseService.notifyGameOver(sessionId, session.getPlayer2().getUsername(), aiWinStatus);
+            }
         }
         
         // Формируем ответ

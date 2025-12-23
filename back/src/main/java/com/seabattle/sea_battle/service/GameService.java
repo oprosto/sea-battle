@@ -18,13 +18,14 @@ public class GameService {
     private final GameSessionManager sessionManager;
     private final AIService aiService;
     private final GameRepository gameRepository; 
+    private final SseNotificationService sseService;
     
-    // Обновить конструктор:
     public GameService(GameSessionManager sessionManager, AIService aiService, 
-                       GameRepository gameRepository) { // Добавляем параметр
+                   GameRepository gameRepository, SseNotificationService sseService) {
         this.sessionManager = sessionManager;
         this.aiService = aiService;
-        this.gameRepository = gameRepository; // Инициализируем
+        this.gameRepository = gameRepository;
+        this.sseService = sseService; 
     }
     
     public List<GameHistoryResponse> getAllGameHistory() {
@@ -100,7 +101,10 @@ public class GameService {
     public JoinGameResponse joinGameSession(UUID sessionId, JoinGameRequest request) {
         // Используем менеджер для атомарной операции
         GameSession session = sessionManager.joinGameSession(sessionId, request.getPlayerName());
-    
+        
+        // Уведомляем через SSE о подключении игрока
+        sseService.notifyPlayerJoined(sessionId, request.getPlayerName());
+
         return new JoinGameResponse(
             session.getSessionId(),
             "Successfully joined the game. Game started!",
