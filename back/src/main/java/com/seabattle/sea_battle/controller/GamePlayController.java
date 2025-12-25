@@ -128,34 +128,34 @@ public class GamePlayController {
         }
     }
     
-    // /**
-    //  * Проверка готовности игроков
-    //  */
-    // @GetMapping("/{sessionId}/ready-status")
-    // public ResponseEntity<?> getReadyStatus(@PathVariable UUID sessionId) {
-    //     try {
-    //         Map<String, Boolean> readyStatus = gamePlayService.getPlayersReadyStatus(sessionId);
-    //         return ResponseEntity.ok(readyStatus);
-    //     } catch (Exception e) {
-    //         return ResponseEntity.badRequest().body(Map.of(
-    //             "error", e.getMessage()
-    //         ));
-    //     }
-    // }
+    /**
+     * Проверка готовности игроков
+     */
+    @GetMapping("/{sessionId}/ready-status")
+    public ResponseEntity<?> getReadyStatus(@PathVariable UUID sessionId) {
+        try {
+            Map<String, Boolean> readyStatus = gamePlayService.getPlayersReadyStatus(sessionId);
+            return ResponseEntity.ok(readyStatus);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", e.getMessage()
+            ));
+        }
+    }
     
-    // /**
-    //  * Получение информации о состоянии игры
-    //  */
-    // @GetMapping("/{sessionId}/game-state")
-    // public ResponseEntity<?> getGameState(@PathVariable UUID sessionId,
-    //                                       @RequestParam String playerName) {
-    //     try {
-    //         Map<String, Object> gameState = gamePlayService.getGameState(sessionId, playerName);
-    //         return ResponseEntity.ok(gameState);
-    //     } catch (Exception e) {
-    //         return ResponseEntity.badRequest().body(Map.of(
-    //             "error", e.getMessage()
-    //         ));
-    //     }
-    // }
+    /**
+     * Получение информации о состоянии игры
+     */
+    @GetMapping("/{sessionId}/game-state")
+    public ResponseEntity<?> getGameState(@PathVariable UUID sessionId,
+                                          @RequestParam String playerName) {
+        try {
+            Map<String, Object> gameState = gamePlayService.getGameState(sessionId, playerName);
+            return ResponseEntity.ok(gameState);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", e.getMessage()
+            ));
+        }
+    }
 }
