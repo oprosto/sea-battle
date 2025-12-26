@@ -42,7 +42,7 @@ public class AIService {
     }
     
     private int[] findTarget(Board board) {
-        Cell[][] cells = board.getCells();
+        Cell[][] cells = board.getOpponentView();
         List<int[]> possibleTargets = new ArrayList<>();
         
         // Сначала ищем клетки для "умного" выстрела (вокруг попаданий)
